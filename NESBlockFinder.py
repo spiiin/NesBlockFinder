@@ -4,7 +4,7 @@ import ttk
 from find_blocks import *
 
 root = Tk()
-root.title("NES Block Finder")
+root.title("NES Block Finder 1.1")
 
 root.columnconfigure(0, weight=1)
 root.rowconfigure(0, weight=1)
@@ -162,12 +162,12 @@ maxRange  = StringVar()
 
 vcmd = (mainframe.register(rangeValidate), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
 
-ttk.Label(mainframe, text="Min range:").grid(column=0, row=11, sticky=W)
+ttk.Label(mainframe, text="Min range:").grid(column=0, row=12, sticky=W)
 minEntry = ttk.Entry(mainframe, width=4, textvariable=minRange, validate = 'key', validatecommand = vcmd)
 minEntry.grid(column=1, row=12, sticky=(W,))
 minRange.set("64")
 
-ttk.Label(mainframe, text="Max range:").grid(column=0, row=12, sticky=W)
+ttk.Label(mainframe, text="Max range:").grid(column=0, row=13, sticky=W)
 maxEntry = ttk.Entry(mainframe, width=4, textvariable=maxRange, validate = 'key', validatecommand = vcmd)
 maxEntry.grid(column=1, row=13, sticky=(W,))
 maxRange.set("255")
