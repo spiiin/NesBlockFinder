@@ -5,14 +5,16 @@ NAME_TABLE_ADDR_1 = 0x2000
 NAME_TABLE_SIZE   = 960
 NAME_TABLE_ROW    = 32
 
-#ATTR_TABLE_ADDR_1 = 0x23C0
-#ATTR_TABLE_SIZE   = 64
+ATTR_TABLE_ADDR_1 = 0x23C0
+ATTR_TABLE_SIZE   = 64
 
-BLOCK_SIZE_ENUM_2x2 = 0
-BLOCK_SIZE_ENUM_4x4 = 1
-BLOCK_SIZE_ENUM_4x2 = 2
-BLOCK_SIZE_ENUM_2x4 = 3
+BLOCK_SIZE_ENUM_1x1 = 0
+BLOCK_SIZE_ENUM_2x2 = 1
+BLOCK_SIZE_ENUM_4x4 = 2
+BLOCK_SIZE_ENUM_4x2 = 3
+BLOCK_SIZE_ENUM_2x4 = 4
 
+start1x1  = (0,)
 start2x2h = (0,1,32,33)
 start2x2v = (0,32,1,33)
 start4x2h = (0,1,2,3, 32,33,34,35)
@@ -22,16 +24,22 @@ start2x4v = (0,32,64,96, 1,33,65,97)
 start4x4h = (0,1,2,3, 32,33,34,35, 64,65,66,67, 96,97,98,99)
 start4x4v = (0,32,64,96, 1,33,65,97, 2,34,66,98, 3,35,67,99)
 #--------------------------------------------------------------------------------
-def getBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes = 64, nameTableSize = NAME_TABLE_SIZE):
-    blocks = getAllScreenBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes, nameTableSize)
+def getBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes = 64):
+    blocks = getAllScreenBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes)
     blocks = list(set(blocks))
     zeroBlock, ffBlock = ('\x00',) * len(blocks[0]), ('\xFF',)*len(blocks[0])
     if zeroBlock in blocks : blocks.remove(zeroBlock)
     if ffBlock in blocks : blocks.remove(ffBlock)
     return blocks
     
-def getAllScreenBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes = 64, nameTableSize = NAME_TABLE_SIZE):
+def getAllScreenBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes = 64):
     rowCount = rowLenInBytes/2
+    nameTableSize = len(tiles)
+    def getNextItem1x1(firstIndex, maxIndex):
+        i = firstIndex
+        while i < maxIndex:
+            yield i
+            i+=1
     def getNextItem2x2(firstIndex, maxIndex):
         i = firstIndex
         while i < maxIndex:
@@ -60,7 +68,8 @@ def getAllScreenBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes = 64, n
                 yield i
                 i += 2
             i += rowCount*2
-            
+    
+    getNextFromPage1x1 = lambda fi : getNextItem1x1(fi, nameTableSize)    
     getNextFromPage2x2 = lambda fi : getNextItem2x2(fi, nameTableSize)
     getNextFromPage4x4 = lambda fi : getNextItem4x4(fi, nameTableSize)
     getNextFromPage4x2 = lambda fi : getNextItem4x2(fi, nameTableSize)
@@ -72,6 +81,8 @@ def getAllScreenBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes = 64, n
         getNextFromPage = getNextFromPage4x2
     elif blockSizeType == BLOCK_SIZE_ENUM_2x4:
         getNextFromPage = getNextFromPage2x4
+    elif blockSizeType == BLOCK_SIZE_ENUM_1x1:
+        getNextFromPage = getNextFromPage1x1
     
     blockIndexesIters = [getNextFromPage(x) for x in startIndexes]
     blocksIndexes = zip(*blockIndexesIters)
@@ -79,7 +90,7 @@ def getAllScreenBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes = 64, n
     return blocks
     
 #--------------------------------------------------------------------------------
-def findBlocksInRom(blocks, romData, convertBlockToReFunc, blockBeginStride):
+def findBlocksInRom(blocks, romData, convertBlockToReFunc, blockBeginStride, maxDistance = 256):
     blockFound = [-1,]*len(romData)
 
     for blockIndex, block in enumerate(blocks):
@@ -100,7 +111,7 @@ def findBlocksInRom(blocks, romData, convertBlockToReFunc, blockBeginStride):
             curIndexes = set()
             if blockFound[x] == -1:
                 continue
-            for lenIndex in xrange(256):
+            for lenIndex in xrange(maxDistance):
                 ind = x + lenIndex * blockBeginStride
                 if ind >= blockFoundLen:
                     break
@@ -120,26 +131,34 @@ def buildReWithStride(blockStr, stride):
     e = re.escape
     return e(blockStr[0]) + strideStr + e(blockStr[1]) + strideStr + e(blockStr[2]) + strideStr + e(blockStr[3])
     
-def checkRom(romName, dataName, blockOrder, convertBlockToReFunc = escapeRe, blockBeginStride = 4, blockSizeType = BLOCK_SIZE_ENUM_2x2, rowLen = 32, maxResults = 10):
+def checkRom(romName, dataName, blockOrder, convertBlockToReFunc = escapeRe, blockBeginStride = 4, blockSizeType = BLOCK_SIZE_ENUM_2x2, rowLen = 32, maxResults = 10, maxDistance =256, findInAttr = False):
     with open(dataName, "rb") as f:
         l = f.read()
-    tiles = l[NAME_TABLE_ADDR_1 : NAME_TABLE_ADDR_1+NAME_TABLE_SIZE]
+    
+    if findInAttr:
+        tiles = l[ATTR_TABLE_ADDR_1 : ATTR_TABLE_ADDR_1+ATTR_TABLE_SIZE]
+    else:
+        tiles = l[NAME_TABLE_ADDR_1 : NAME_TABLE_ADDR_1+NAME_TABLE_SIZE]
     blocks = getBlocks(blockOrder, tiles, blockSizeType, rowLen)
     
     with open(romName, "rb") as f:
         d = f.read()
-    found = findBlocksInRom(blocks, d, convertBlockToReFunc, blockBeginStride)
+    found = findBlocksInRom(blocks, d, convertBlockToReFunc, blockBeginStride, maxDistance)
     print romName
     for addr, val, curIndexes in found[:maxResults]:
         print "   ", hex(addr), " ", val, "(", curIndexes, ")"
         
-def checkRomGui(romName, dataName, blockOrder, convertBlockToReFunc = escapeRe, blockBeginStride = 4, blockSizeType = BLOCK_SIZE_ENUM_2x2, rowLen = 32, maxResults = 10):
+def checkRomGui(romName, dataName, blockOrder, convertBlockToReFunc = escapeRe, blockBeginStride = 4, blockSizeType = BLOCK_SIZE_ENUM_2x2, rowLen = 32, maxResults = 10, maxDistance=256, findInAttr = False):
     with open(dataName, "rb") as f:
         l = f.read()
-    tiles = l[NAME_TABLE_ADDR_1 : NAME_TABLE_ADDR_1+NAME_TABLE_SIZE]
+    
+    if findInAttr:
+        tiles = l[ATTR_TABLE_ADDR_1 : ATTR_TABLE_ADDR_1+ATTR_TABLE_SIZE]
+    else:
+        tiles = l[NAME_TABLE_ADDR_1 : NAME_TABLE_ADDR_1+NAME_TABLE_SIZE]
     blocks = getBlocks(blockOrder, tiles, blockSizeType, rowLen)
     
     with open(romName, "rb") as f:
         d = f.read()
-    found = findBlocksInRom(blocks, d, convertBlockToReFunc, blockBeginStride)
+    found = findBlocksInRom(blocks, d, convertBlockToReFunc, blockBeginStride, maxDistance)
     return found[:maxResults]
