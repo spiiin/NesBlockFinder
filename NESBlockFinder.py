@@ -36,6 +36,9 @@ def run():
     if blockUpDown.get() == True and block2x4.get() == True:
         niceSearch("Search 2x4 blocks, top-down"  , fname.get(), dump.get(), start2x4v, blockSizeType = BLOCK_SIZE_ENUM_2x4)
         mainframe.update()
+    if block1x1.get() == True:
+        niceSearch("Search 1x1 blocks (tiles indexes)"  , fname.get(), dump.get(), start1x1, blockBeginStride = 1, blockSizeType = BLOCK_SIZE_ENUM_1x1)
+        mainframe.update()
     if attrSearch.get() == True:
         niceSearch("Attributes bytes search", fname.get(), dump.get(), start1x1, blockBeginStride = 1, blockSizeType = BLOCK_SIZE_ENUM_1x1, maxDistance = 64, findInAttr = True)
         mainframe.update()
@@ -62,7 +65,7 @@ def niceSearch(text, *args, **kwargs):
          result1.insert(END, "Nothing found\n", "addr")
     for addr, val, curIndexes in found:
         result1.insert(END, niceHex(addr)+" ("+str(val)+" blocks around)\n", "addr")
-        result1.insert(END, str(sorted(list(curIndexes))) +"\n", "color")
+        #result1.insert(END, str(sorted(list(curIndexes))) +"\n", "color")
     result1.focus_set()
 #-----------------------------------------------------------------------------------------------------------------
 def fnameClick(event):
@@ -131,22 +134,27 @@ block2x4 = BooleanVar()
 cb2x4 = ttk.Checkbutton(mainframe, text='Search 2x4/4x2 blocks', variable = block2x4)
 cb2x4.grid(column=0, row=6, sticky=(W, E))
 block2x4.set(False)
+
+block1x1 = BooleanVar()
+cb1x1 = ttk.Checkbutton(mainframe, text='Search 1x1 blocks (use with cut-scenes)', variable = block1x1)
+cb1x1.grid(column=0, row=7, sticky=(W, E))
+block1x1.set(False)
 #--------------------------------------------------------------------------------------------------
-ttk.Label(mainframe, text="Advance search:").grid(column=0, row=7, sticky=W, pady = 5)
+ttk.Label(mainframe, text="Advance search:").grid(column=0, row=8, sticky=W, pady = 5)
 
 attrSearch = BooleanVar()
 cbAttrSearch = ttk.Checkbutton(mainframe, text='Attributes search (use with 4x4 standart blocks)', variable = attrSearch)
-cbAttrSearch.grid(column=0, row=8, sticky=(W, E))
+cbAttrSearch.grid(column=0, row=9, sticky=(W, E))
 attrSearch.set(True)
 
 blockStride255 = BooleanVar()
 cbStride255 = ttk.Checkbutton(mainframe, text='Search block parts with stride 255', variable = blockStride255)
-cbStride255.grid(column=0, row=9, sticky=(W, E))
+cbStride255.grid(column=0, row=10, sticky=(W, E))
 blockStride255.set(True)
 
 blockStride = BooleanVar()
 cbStride = ttk.Checkbutton(mainframe, text='Search block parts with stride range:', variable = blockStride)
-cbStride.grid(column=0, row=10, sticky=(W, E))
+cbStride.grid(column=0, row=11, sticky=(W, E))
 blockStride.set(False)
 
 minRange  = StringVar()
@@ -154,26 +162,26 @@ maxRange  = StringVar()
 
 vcmd = (mainframe.register(rangeValidate), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
 
-ttk.Label(mainframe, text="Min range:").grid(column=0, row=10, sticky=W)
+ttk.Label(mainframe, text="Min range:").grid(column=0, row=11, sticky=W)
 minEntry = ttk.Entry(mainframe, width=4, textvariable=minRange, validate = 'key', validatecommand = vcmd)
-minEntry.grid(column=1, row=11, sticky=(W,))
+minEntry.grid(column=1, row=12, sticky=(W,))
 minRange.set("64")
 
-ttk.Label(mainframe, text="Max range:").grid(column=0, row=11, sticky=W)
+ttk.Label(mainframe, text="Max range:").grid(column=0, row=12, sticky=W)
 maxEntry = ttk.Entry(mainframe, width=4, textvariable=maxRange, validate = 'key', validatecommand = vcmd)
-maxEntry.grid(column=1, row=12, sticky=(W,))
+maxEntry.grid(column=1, row=13, sticky=(W,))
 maxRange.set("255")
 #--------------------------------------------------------------------------------------------------
-ttk.Button(mainframe, text="Run", command=run).grid(column=0, row=13, sticky=(W,E), columnspan=2)
+ttk.Button(mainframe, text="Run", command=run).grid(column=0, row=14, sticky=(W,E), columnspan=2)
 #--------------------------------------------------------------------------------------------------
 result1 = Text(mainframe, width=32, height=12)
-result1.grid(column=0, row=14, sticky=(W,E,S,N), columnspan=2)
+result1.grid(column=0, row=15, sticky=(W,E,S,N), columnspan=2)
 result1.tag_configure('method', font=('Verdana', 12, 'bold'))
 result1.tag_configure('method_error', font=('Verdana', 12, 'bold'), foreground='#FF0000')
 result1.tag_configure('addr', font=('Courier New', 10, 'bold'))
 result1.tag_configure('color', foreground='#476042', font=('Courier New', 10))
 s = ttk.Scrollbar(mainframe, orient=VERTICAL, command=result1.yview)
-s.grid(column=2, row=14, sticky=(N,S))
+s.grid(column=2, row=15, sticky=(N,S))
 result1['yscrollcommand'] = s.set
 #--------------------------------------------------------------------------------------------------
 root.mainloop()
