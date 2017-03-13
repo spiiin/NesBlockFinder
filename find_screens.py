@@ -41,6 +41,11 @@ def readScreenBlocks16x1(l, offset):
     tiles = l[NAME_TABLE_ADDR_1 + offset : NAME_TABLE_ADDR_1+NAME_TABLE_SIZE]
     return getAllScreenBlocks(start4x4h, tiles, BLOCK_SIZE_ENUM_4x4, 64)
     
+def makeVerticalScreen(macroTiles, screenWidth = 8):
+    groupedMactoTiles = grouper(screenWidth, macroTiles, "\xff")
+    groupedMactoTiles = zip(*groupedMactoTiles)
+    return list([item for sublist in groupedMactoTiles for item in sublist])
+    
 #----------------------------------------------------------------------------
 def findScreens(romName, dataName, blocksAddr, blocksCount):
     with open(romName, "rb") as f:
@@ -55,10 +60,13 @@ def findScreens(romName, dataName, blocksAddr, blocksCount):
         inCount, _ = checkInOut(possibleScreenBlocks, blocks)
         if inCount > maxInBlocks:
             screenBlocks = possibleScreenBlocks
+            maxInBlocks = inCount
     
     macroTiles = remap(screenBlocks, blocks)
+    #macroTiles = makeVerticalScreen(macroTiles, 8)
     #print [hex(ord(mt)) for mt in macroTiles]
-    found = findBlocksInRom(grouper(4, macroTiles), d, escapeRe, blockBeginStride = 4, maxDistance = 32)
+    found = findBlocksInRom(grouper(2, macroTiles), d, escapeRe, blockBeginStride = 2, maxDistance = 32)
     return found[:10]
 #-----------------------------------------------------------------------------------
 #findScreens("Teenage Mutant Ninja Turtles III - The Manhattan Project (U) [!].nes", "Teenage Mutant Ninja Turtles III - The Manhattan Project (U) [!]_ppu1.bin", 0x30471, 220)
+#findScreens("Jackie Chan's Action Kung Fu (U) [!p].nes", "Jackie Chan's Action Kung Fu (U) [!p]_ppu1.bin", 0x64c, 196)
