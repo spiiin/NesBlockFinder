@@ -47,7 +47,7 @@ def makeVerticalScreen(macroTiles, screenWidth = 8):
     return list([item for sublist in groupedMactoTiles for item in sublist])
     
 #----------------------------------------------------------------------------
-def findScreens(romName, dataName, blocksAddr, blocksCount):
+def findScreens(romName, dataName, blocksAddr, blocksCount, vertical):
     with open(romName, "rb") as f:
         d = f.read()
     with open(dataName, "rb") as f:
@@ -63,7 +63,8 @@ def findScreens(romName, dataName, blocksAddr, blocksCount):
             maxInBlocks = inCount
     
     macroTiles = remap(screenBlocks, blocks)
-    #macroTiles = makeVerticalScreen(macroTiles, 8)
+    if vertical:
+        macroTiles = makeVerticalScreen(macroTiles, 8)
     #print [hex(ord(mt)) for mt in macroTiles]
     found = findBlocksInRom(grouper(2, macroTiles), d, escapeRe, blockBeginStride = 2, maxDistance = 32)
     return found[:10]

@@ -23,7 +23,8 @@ def run():
     
     blocksAddr = strToInt(blocksAddrVar.get())
     blocksCount = strToInt(blocksCountVar.get())
-    niceSearch("Search screens result:", fname.get(), dump.get(), blocksAddr, blocksCount)
+    isVertical = isVerticalVar.get()
+    niceSearch("Search screens result:", fname.get(), dump.get(), blocksAddr, blocksCount, vertical = isVertical)
     mainframe.update()
     result1.insert(END, "Search complete!" + "\n", "method")
     
@@ -92,17 +93,22 @@ blocksCountEntry = ttk.Entry(mainframe, width=12, textvariable=blocksCountVar, v
 blocksCountEntry.grid(column=1, row=4, sticky=(W,))
 blocksCountVar.set("255")
 
+isVerticalVar = BooleanVar()
+blocksCountEntry =  ttk.Checkbutton(mainframe, text='Top-down screen', variable = isVerticalVar)
+blocksCountEntry.grid(column=0, row=5, sticky=(W,))
+isVerticalVar.set(False)
+
 #--------------------------------------------------------------------------------------------------
-ttk.Button(mainframe, text="Run", command=run).grid(column=0, row=5, sticky=(W,E), columnspan=2)
+ttk.Button(mainframe, text="Run", command=run).grid(column=0, row=6, sticky=(W,E), columnspan=2)
 #--------------------------------------------------------------------------------------------------
 result1 = Text(mainframe, width=32, height=12)
-result1.grid(column=0, row=6, sticky=(W,E,S,N), columnspan=2)
+result1.grid(column=0, row=7, sticky=(W,E,S,N), columnspan=2)
 result1.tag_configure('method', font=('Verdana', 12, 'bold'))
 result1.tag_configure('method_error', font=('Verdana', 12, 'bold'), foreground='#FF0000')
 result1.tag_configure('addr', font=('Courier New', 10, 'bold'))
 result1.tag_configure('color', foreground='#476042', font=('Courier New', 10))
 s = ttk.Scrollbar(mainframe, orient=VERTICAL, command=result1.yview)
-s.grid(column=2, row=6, sticky=(N,S))
+s.grid(column=2, row=7, sticky=(N,S))
 result1['yscrollcommand'] = s.set
 #--------------------------------------------------------------------------------------------------
 root.mainloop()
