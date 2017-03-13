@@ -24,7 +24,7 @@ start2x4v = (0,32,64,96, 1,33,65,97)
 start4x4h = (0,1,2,3, 32,33,34,35, 64,65,66,67, 96,97,98,99)
 start4x4v = (0,32,64,96, 1,33,65,97, 2,34,66,98, 3,35,67,99)
 #--------------------------------------------------------------------------------
-def getBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes = 64):
+def getBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes = 32):
     blocks = getAllScreenBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes)
     blocks = list(set(blocks))
     zeroBlock, ffBlock = ('\x00',) * len(blocks[0]), ('\xFF',)*len(blocks[0])
@@ -32,7 +32,7 @@ def getBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes = 64):
     if ffBlock in blocks : blocks.remove(ffBlock)
     return blocks
     
-def getAllScreenBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes = 64):
+def getAllScreenBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes = 32):
     rowCount = rowLenInBytes/2
     nameTableSize = len(tiles)
     def getNextItem1x1(firstIndex, maxIndex):
@@ -50,10 +50,11 @@ def getAllScreenBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes = 64):
     def getNextItem4x4(firstIndex, maxIndex):
         i = firstIndex
         while i < maxIndex:
+            startRowI = i
             for x in xrange(rowCount/4):
                 yield i
                 i += 4
-            i += rowCount*2
+            i = startRowI + rowCount*4
     def getNextItem4x2(firstIndex, maxIndex):
         i = firstIndex
         while i < maxIndex:
@@ -64,10 +65,11 @@ def getAllScreenBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes = 64):
     def getNextItem2x4(firstIndex, maxIndex):
         i = firstIndex
         while i < maxIndex:
+            startRowI = i
             for x in xrange(rowCount/2):
                 yield i
                 i += 2
-            i += rowCount*2
+            i = startRowI + rowCount*4
     
     getNextFromPage1x1 = lambda fi : getNextItem1x1(fi, nameTableSize)    
     getNextFromPage2x2 = lambda fi : getNextItem2x2(fi, nameTableSize)
@@ -86,6 +88,8 @@ def getAllScreenBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes = 64):
     
     blockIndexesIters = [getNextFromPage(x) for x in startIndexes]
     blocksIndexes = zip(*blockIndexesIters)
+    #for bi in blocksIndexes:
+    #    print bi
     blocks = [itemgetter(*b)(tiles) for b in blocksIndexes]
     return blocks
     
