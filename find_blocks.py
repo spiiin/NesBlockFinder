@@ -13,10 +13,12 @@ BLOCK_SIZE_ENUM_2x2 = 1
 BLOCK_SIZE_ENUM_4x4 = 2
 BLOCK_SIZE_ENUM_4x2 = 3
 BLOCK_SIZE_ENUM_2x4 = 4
+BLOCK_SIZE_ENUM_4x1 = 5
 
 start1x1  = (0,)
 start2x2h = (0,1,32,33)
 start2x2v = (0,32,1,33)
+start4x1h = (0,1,2,3)
 start4x2h = (0,1,2,3, 32,33,34,35)
 start4x2v = (0,32, 1,33, 2,34, 3,35)
 start2x4h = (0,1,32,33, 64,65,96,97)
@@ -62,6 +64,13 @@ def getAllScreenBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes = 32):
                 yield i
                 i += 4
             i += rowCount
+    def getNextItem4x1(firstIndex, maxIndex):
+        i = firstIndex
+        while i < maxIndex:
+            for x in xrange(rowCount/4):
+                yield i
+                i += 4
+            i += rowCount
     def getNextItem2x4(firstIndex, maxIndex):
         i = firstIndex
         while i < maxIndex:
@@ -76,6 +85,7 @@ def getAllScreenBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes = 32):
     getNextFromPage4x4 = lambda fi : getNextItem4x4(fi, nameTableSize)
     getNextFromPage4x2 = lambda fi : getNextItem4x2(fi, nameTableSize)
     getNextFromPage2x4 = lambda fi : getNextItem2x4(fi, nameTableSize)
+    getNextFromPage4x1 = lambda fi : getNextItem4x1(fi, nameTableSize)
     getNextFromPage = getNextFromPage2x2
     if blockSizeType == BLOCK_SIZE_ENUM_4x4:
         getNextFromPage = getNextFromPage4x4
@@ -83,6 +93,8 @@ def getAllScreenBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes = 32):
         getNextFromPage = getNextFromPage4x2
     elif blockSizeType == BLOCK_SIZE_ENUM_2x4:
         getNextFromPage = getNextFromPage2x4
+    elif blockSizeType == BLOCK_SIZE_ENUM_4x1:
+        getNextFromPage = getNextFromPage4x1
     elif blockSizeType == BLOCK_SIZE_ENUM_1x1:
         getNextFromPage = getNextFromPage1x1
     
