@@ -122,7 +122,16 @@ def findBlocksInRom(blocks, romData, convertBlockToReFunc, blockBeginStride, max
                 blockFound[m.start()] = blockIndex
         except:
             print blockStr
-
+            
+    def checkAlreadyInLongestStrip(longestStrip, newVal):
+        if longestStrip == []:
+            return True
+        blockLen = len(blocks[0])
+        addr1, len1, _ = longestStrip[-1]
+        addr2, len2, _ = newVal
+        #return addr1 + len1*blockLen < addr2 #for really not crossing zones
+        return addr1 + len1*blockLen < addr2 + len2*blockLen
+        
     def calcLongestStrip(blockFound, blockBeginStride):
         longestStrip = []
         blockFoundLen = len(blockFound)
@@ -139,7 +148,9 @@ def findBlocksInRom(blocks, romData, convertBlockToReFunc, blockBeginStride, max
                     curIndexes.add(blockFound[ind])
                     #curIndexes.append(blockFound[ind])
             if len(curIndexes) > 3:
-                longestStrip.append((x, len(curIndexes), curIndexes))
+                newStripData = (x, len(curIndexes), curIndexes)
+                if checkAlreadyInLongestStrip(longestStrip, newStripData):
+                  longestStrip.append(newStripData)
         return sorted(longestStrip, key = lambda v:v[1], reverse = True)
     
     return calcLongestStrip(blockFound, blockBeginStride)
