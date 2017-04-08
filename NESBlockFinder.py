@@ -43,7 +43,7 @@ def run():
         niceSearch("Search 1x1 blocks (tiles indexes)"  , fname.get(), dump.get(), start1x1, blockBeginStride = 1, blockSizeType = BLOCK_SIZE_ENUM_1x1)
         mainframe.update()
     if attrSearch.get() == True:
-        niceSearch("Attributes bytes search", fname.get(), dump.get(), start1x1, blockBeginStride = 1, blockSizeType = BLOCK_SIZE_ENUM_1x1, maxDistance = 64, findInAttr = True)
+        niceSearch("Attributes bytes search", fname.get(), dump.get(), start1x1, blockBeginStride = 1, blockSizeType = BLOCK_SIZE_ENUM_1x1, maxDistance = 32, findInAttr = True)
         mainframe.update()
     if blockStride255.get() == True:
         niceSearch("Search with stride 255, block 2x2, left-right", fname.get(), dump.get(), start2x2h, lambda(block) : buildReWithStride (block, 255), 1)
@@ -170,12 +170,12 @@ maxRange  = StringVar()
 
 vcmd = (mainframe.register(rangeValidate), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
 
-ttk.Label(mainframe, text="Min range:").grid(column=0, row=12, sticky=W)
+ttk.Label(mainframe, text="Min range:").grid(column=0, row=13, sticky=W)
 minEntry = ttk.Entry(mainframe, width=4, textvariable=minRange, validate = 'key', validatecommand = vcmd)
 minEntry.grid(column=1, row=13, sticky=(W,))
 minRange.set("64")
 
-ttk.Label(mainframe, text="Max range:").grid(column=0, row=13, sticky=W)
+ttk.Label(mainframe, text="Max range:").grid(column=0, row=14, sticky=W)
 maxEntry = ttk.Entry(mainframe, width=4, textvariable=maxRange, validate = 'key', validatecommand = vcmd)
 maxEntry.grid(column=1, row=14, sticky=(W,))
 maxRange.set("255")
