@@ -29,9 +29,12 @@ start4x4v = (0,32,64,96, 1,33,65,97, 2,34,66,98, 3,35,67,99)
 def getBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes = 32):
     blocks = getAllScreenBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes)
     blocks = list(set(blocks))
-    zeroBlock, ffBlock = ('\x00',) * len(blocks[0]), ('\xFF',)*len(blocks[0])
-    if zeroBlock in blocks : blocks.remove(zeroBlock)
-    if ffBlock in blocks : blocks.remove(ffBlock)
+    zeroBlock, ffBlock = '\x00', '\xFF'
+    zeroBlockL, ffBlockL = ('\x00',) * len(blocks[0]), ('\xFF',)*len(blocks[0])
+    if zeroBlock in blocks: blocks.remove(zeroBlock)
+    if ffBlock in blocks: blocks.remove(ffBlock)
+    if zeroBlockL in blocks: blocks.remove(zeroBlockL)
+    if ffBlockL in blocks: blocks.remove(ffBlockL)
     return blocks
     
 def getAllScreenBlocks(startIndexes, tiles, blockSizeType, rowLenInBytes = 32):
@@ -124,6 +127,7 @@ def findBlocksInRom(blocks, romData, convertBlockToReFunc, blockBeginStride, max
         longestStrip = []
         blockFoundLen = len(blockFound)
         for x in xrange(blockFoundLen):
+            #curIndexes = list()
             curIndexes = set()
             if blockFound[x] == -1:
                 continue
@@ -133,6 +137,7 @@ def findBlocksInRom(blocks, romData, convertBlockToReFunc, blockBeginStride, max
                     break
                 if blockFound[ind] != -1:
                     curIndexes.add(blockFound[ind])
+                    #curIndexes.append(blockFound[ind])
             if len(curIndexes) > 3:
                 longestStrip.append((x, len(curIndexes), curIndexes))
         return sorted(longestStrip, key = lambda v:v[1], reverse = True)
@@ -147,7 +152,7 @@ def buildReWithStride(blockStr, stride):
     e = re.escape
     return e(blockStr[0]) + strideStr + e(blockStr[1]) + strideStr + e(blockStr[2]) + strideStr + e(blockStr[3])
     
-def checkRom(romName, dataName, blockOrder, convertBlockToReFunc = escapeRe, blockBeginStride = 4, blockSizeType = BLOCK_SIZE_ENUM_2x2, rowLen = 32, maxResults = 10, maxDistance =256, findInAttr = False):
+def checkRom(romName, dataName, blockOrder, convertBlockToReFunc = escapeRe, blockBeginStride = 4, blockSizeType = BLOCK_SIZE_ENUM_2x2, rowLen = 32, maxResults = 10, maxDistance = 256, findInAttr = False):
     with open(dataName, "rb") as f:
         l = f.read()
     
@@ -173,6 +178,10 @@ def checkRomGui(romName, dataName, blockOrder, convertBlockToReFunc = escapeRe, 
     else:
         tiles = l[NAME_TABLE_ADDR_1 : NAME_TABLE_ADDR_1+NAME_TABLE_SIZE]
     blocks = getBlocks(blockOrder, tiles, blockSizeType, rowLen)
+    
+    #
+    #if findInAttr:
+    #    print [hex(ord(b)) for b in blocks]
     
     with open(romName, "rb") as f:
         d = f.read()
